@@ -1,18 +1,30 @@
 import com.sun.source.util.Plugin
 import kotlin.math.*
 
-class Polynome {
-    val coeffs: DoubleArray
-    val degree: Int
+open class Polynome {
+    var coeffs: DoubleArray
+    var degree: Int
 
     constructor(coeffs: DoubleArray) {
-        this.coeffs = coeffs
+        this.coeffs = clean(coeffs)
         this.degree = this.coeffs.size - 1
     }
 
     constructor() : this(doubleArrayOf(0.0))
     constructor(i: Int) : this(DoubleArray(i, { 0.0 }))
 
+
+    fun clean(coeffs: DoubleArray):DoubleArray{
+        var my_coeffs = coeffs
+        var count = 0
+        for(i in my_coeffs.size - 1 downTo 0)
+            if(my_coeffs[i] == 0.0)
+                count++
+            else
+                break
+        my_coeffs = my_coeffs.dropLast(count).toDoubleArray()
+        return my_coeffs
+    }
 
     override fun toString(): String {
         var str = ""
@@ -55,13 +67,39 @@ class Polynome {
 }
 
 operator fun Double.times(p: Polynome) = p.times(this)
+operator fun Int.times(p:Polynome) = p.times(this)
 
+class Lagrange:Polynome{
+    var points: DoubleArray
+
+    constructor(points: DoubleArray):super(){
+        this.degree = points.size - 1
+        this.points = points
+        this.coeffs = calculate().coeffs
+    }
+
+    fun calculate():Polynome{
+        var p = Polynome(doubleArrayOf(0.0))
+        for(i in 0.. points.size-1) {
+            var x = basis_polynome(i)
+            p += function(points[i]) * basis_polynome(i)
+        }
+        return p
+    }
+
+    fun basis_polynome(i: Int):Polynome{
+        var p: Polynome = Polynome(doubleArrayOf(1.0))
+        for(j in 0..points.size-1)
+            if(j!=i)
+                p *= Polynome(doubleArrayOf(-points[j]/(points[i]-points[j]), 1/(points[i]-points[j])))
+        return p
+    }
+    fun function(x:Double) = sin(x)
+
+}
 
 
 fun main() {
-    var a = Polynome(doubleArrayOf(1.0, 2.0))
-    var b = Polynome(doubleArrayOf(1.0, 1.0))
-    //var c = a + b
-    //println(c.degree)
-    println(a)
+    var l = Lagrange(doubleArrayOf(0.0,1.0,2.0))
+    println(l)
 }
